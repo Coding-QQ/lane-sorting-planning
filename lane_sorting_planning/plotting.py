@@ -10,6 +10,8 @@ from .reference_trajectory_generation import generate_quintic_reference_trajecto
 
 LEGEND_FONT = {"family": "Times New Roman", "size": 12}
 AXIS_LABEL_FONT = {"family": "Times New Roman", "size": 16}
+AXIS_LABEL_FONT_SA = {"family": "Times New Roman", "size": 18}
+SOFT_LIMIT_COLOR = "#e65353"
 
 
 def plot_case_study(
@@ -36,6 +38,8 @@ def _plot_speed(trajectories: dict[int, dict[str, np.ndarray]], params: Planning
     fig = plt.figure(figsize=(5, 4))
     ax = fig.add_subplot(111)
     markers = ["o", "s", "^", "D", "v", "p", "h", "*", "X", "P"]
+    cmap = plt.colormaps.get_cmap("tab10")
+    colors = cmap(np.linspace(0, 1, len(trajectories)))
 
     for idx, agent in enumerate(trajectories.keys()):
         trajectory = trajectories[agent]
@@ -47,16 +51,17 @@ def _plot_speed(trajectories: dict[int, dict[str, np.ndarray]], params: Planning
 
         time = index * params.delta_t
         marker = markers[idx % len(markers)]
-        ax.plot(time, speed[index], linewidth=1.5, marker=marker, markersize=0, label=f"Vehicle: {agent}")
+        color = colors[int(agent)] if str(agent).isdigit() else colors[idx]
+        ax.plot(time, speed[index], linewidth=1.5, marker=marker, markersize=0, color=color, label=f"Vehicle: {agent}")
 
-    ax.set_xlabel("Time (s)", fontdict=AXIS_LABEL_FONT)
-    ax.set_ylabel("Speed (m/s)", fontdict=AXIS_LABEL_FONT)
-    ax.set_ylim([-0.5, params.v_max + 1])
+    ax.set_xlabel("Time (s)", fontdict=AXIS_LABEL_FONT_SA)
+    ax.set_ylabel("Speed (m/s)", fontdict=AXIS_LABEL_FONT_SA)
+    ax.set_ylim([-2.0, params.v_max + 4.0])
     for label in ax.get_xticklabels() + ax.get_yticklabels():
-        label.set_fontname("Arial")
+        label.set_fontname("Times New Roman")
     ax.tick_params(axis="x", labelsize=12)
     ax.tick_params(axis="y", labelsize=12)
-    ax.axhline(params.v_max, color="r", linestyle="--", linewidth=1.25)
+    ax.axhline(params.v_max, color=SOFT_LIMIT_COLOR, linestyle="--", linewidth=1.1, alpha=0.75)
     ax.legend(prop=LEGEND_FONT)
     ax.grid(True)
     fig.savefig(output_path, bbox_inches="tight")
@@ -69,6 +74,8 @@ def _plot_accel(trajectories: dict[int, dict[str, np.ndarray]], params: Planning
     fig = plt.figure(figsize=(5, 4))
     ax = fig.add_subplot(111)
     markers = ["o", "s", "^", "D", "v", "p", "h", "*", "X", "P"]
+    cmap = plt.colormaps.get_cmap("tab10")
+    colors = cmap(np.linspace(0, 1, len(trajectories)))
 
     for idx, agent in enumerate(trajectories.keys()):
         trajectory = trajectories[agent]
@@ -82,17 +89,26 @@ def _plot_accel(trajectories: dict[int, dict[str, np.ndarray]], params: Planning
         time = index * params.delta_t
         accel = accel[index]
         marker = markers[idx % len(markers)]
-        ax.plot(time[1:-1], accel[1:-1], linewidth=1.5, marker=marker, markersize=0, label=f"Vehicle: {agent}")
+        color = colors[int(agent)] if str(agent).isdigit() else colors[idx]
+        ax.plot(
+            time[1:-1],
+            accel[1:-1],
+            linewidth=1.5,
+            marker=marker,
+            markersize=0,
+            color=color,
+            label=f"Vehicle: {agent}",
+        )
 
-    ax.set_xlabel("Time (s)", fontdict=AXIS_LABEL_FONT)
-    ax.set_ylabel("Acceleration (m/s$^2$)", fontdict=AXIS_LABEL_FONT)
-    ax.set_ylim([params.a_min - 1, params.a_max + 1])
+    ax.set_xlabel("Time (s)", fontdict=AXIS_LABEL_FONT_SA)
+    ax.set_ylabel("Acceleration (m/s$^2$)", fontdict=AXIS_LABEL_FONT_SA)
+    ax.set_ylim([params.a_min - 3.0, params.a_max + 3.0])
     for label in ax.get_xticklabels() + ax.get_yticklabels():
-        label.set_fontname("Arial")
+        label.set_fontname("Times New Roman")
     ax.tick_params(axis="x", labelsize=12)
     ax.tick_params(axis="y", labelsize=12)
-    ax.axhline(params.a_max, color="r", linestyle="--", linewidth=1.25)
-    ax.axhline(params.a_min, color="r", linestyle="--", linewidth=1.25)
+    ax.axhline(params.a_max, color=SOFT_LIMIT_COLOR, linestyle="--", linewidth=1.1, alpha=0.75)
+    ax.axhline(params.a_min, color=SOFT_LIMIT_COLOR, linestyle="--", linewidth=1.1, alpha=0.75)
     ax.legend(prop=LEGEND_FONT, loc="lower right")
     ax.grid(True)
     fig.savefig(output_path, bbox_inches="tight")
